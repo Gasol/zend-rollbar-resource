@@ -1,0 +1,29 @@
+language: php
+
+php:
+  - 5.6
+  - 7.2
+  - 7.3
+
+stages:
+  - check
+  - test
+
+script: make test
+
+after_success: travis_retry make coveralls
+
+jobs:
+  include:
+    - name: Check style
+      stage: check
+      script: make style
+      after_success: skip
+    - name: Run static analysis
+      php: 7.2
+      script: make stan
+      after_success: skip
+
+cache:
+  directories:
+    - $HOME/.composer/cache/files
