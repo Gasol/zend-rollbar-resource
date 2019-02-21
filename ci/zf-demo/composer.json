@@ -1,0 +1,13 @@
+{
+    "require": {
+        "gasolwu/zend-rollbar-resource": "*@dev",
+        "rollbar/rollbar": "^1",
+        "zendframework/zendframework1": "1.*"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "@TRAVIS_BUILD_DIR@"
+        }
+    ]
+}

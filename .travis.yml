@@ -23,6 +23,29 @@ jobs:
       php: 7.2
       script: make stan
       after_success: skip
+    - name: Acceptance test
+      stage: test
+      php: 5.6
+      before_script:
+        - sudo apt-get update
+        - sudo apt-get install apache2 libapache2-mod-fastcgi
+        - cp ~/.phpenv/versions/$TRAVIS_PHP_VERSION/etc/php-fpm.conf.default ~/.phpenv/versions/$TRAVIS_PHP_VERSION/etc/php-fpm.conf
+        - echo 'env[APPLICATION_ENV] = development' >> ~/.phpenv/versions/$TRAVIS_PHP_VERSION/etc/php-fpm.conf
+        - sudo a2enmod rewrite actions fastcgi alias
+        - sudo sed -i -e "s,www-data,travis,g" /etc/apache2/envvars
+        - sudo chown -R travis:travis /var/lib/apache2/fastcgi
+        - ~/.phpenv/versions/$TRAVIS_PHP_VERSION/sbin/php-fpm
+        - ZEND_APP_DIR=$(dirname $TRAVIS_BUILD_DIR)/zf-demo
+        - mv ci/zf-demo "$ZEND_APP_DIR"
+        - sudo cp -f ci/build/travis-ci-apache /etc/apache2/sites-available/000-default.conf
+        - sudo sed -e "s|@TRAVIS_BUILD_DIR@|$TRAVIS_BUILD_DIR|g" --in-place "$ZEND_APP_DIR/composer.json"
+        - sudo sed -e "s|@TRAVIS_BUILD_DIR@|$ZEND_APP_DIR/public|g" --in-place /etc/apache2/sites-available/000-default.conf
+        - sudo sed -e "s|REPLACE_ROLLBAR_ACCESS_TOKEN_HERE|\"$TEST_ROLLBAR_ACCESS_TOKEN\"|g" --in-place "$ZEND_APP_DIR/application/configs/application.ini"
+        - sudo service apache2 restart
+        - (cd $ZEND_APP_DIR; composer update)
+      after_success: skip
+      script:
+        - curl -vs --fail localhost
 
 cache:
   directories:
